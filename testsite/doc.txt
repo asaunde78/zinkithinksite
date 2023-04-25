@@ -1,0 +1,19 @@
+<img alt="Google" height="92" id="hplogo" src="/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png" style="padding:28px 0 14px" width="272"/>
+<a class="gb1" href="https://www.google.com/imghp?hl=en&amp;tab=wi">Images</a>
+<a class="gb1" href="https://maps.google.com/maps?hl=en&amp;tab=wl">Maps</a>
+<a class="gb1" href="https://play.google.com/?hl=en&amp;tab=w8">Play</a>
+<a class="gb1" href="https://www.youtube.com/?tab=w1">YouTube</a>
+<a class="gb1" href="https://news.google.com/?tab=wn">News</a>
+<a class="gb1" href="https://mail.google.com/mail/?tab=wm">Gmail</a>
+<a class="gb1" href="https://drive.google.com/?tab=wo">Drive</a>
+<a class="gb1" href="https://www.google.com/intl/en/about/products?tab=wh" style="text-decoration:none"><u>More</u> »</a>
+<a class="gb4" href="http://www.google.com/history/optout?hl=en">Web History</a>
+<a class="gb4" href="/preferences?hl=en">Settings</a>
+<a class="gb4" href="https://accounts.google.com/ServiceLogin?hl=en&amp;passive=true&amp;continue=https://www.google.com/&amp;ec=GAZAAQ" id="gb_70" target="_top">Sign in</a>
+<a href="/advanced_search?hl=en&amp;authuser=0">Advanced search</a>
+<a class="NKcBbd" href="https://www.google.com/url?q=https://www.youtube.com/watch%3Fv%3D5Ibx54G1nWo&amp;source=hpp&amp;id=19034948&amp;ct=3&amp;usg=AOvVaw3paFIWlmbf4IB9pdeG2K1W&amp;sa=X&amp;ved=0ahUKEwiwrJ6pqcH-AhUeQPEDHZcaAOEQ8IcBCAU" rel="nofollow">2023 Breakthrough Prize</a>
+<a href="/intl/en/ads/">Advertising</a>
+<a href="/services/">Business Solutions</a>
+<a href="/intl/en/about.html">About Google</a>
+<a href="/intl/en/policies/privacy/">Privacy</a>
+<a href="/intl/en/policies/terms/">Terms</a>
