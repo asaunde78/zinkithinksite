@@ -3,6 +3,8 @@ import { drawScene } from "./draw-scene.js";
 
 let cubeRotation = 0.0;
 let deltaTime = 0;
+var x = 0;
+var y = 0;
 main();
 
 //
@@ -130,10 +132,15 @@ function main() {
     then = now;
     const fps = 1 / deltaTime;             // compute frames per second
     fpsElem.textContent = fps.toFixed(1);
-    drawScene(gl, programInfo, buffers, cubeRotation);
+    drawScene(gl, programInfo, buffers, Math.pow(x*y,.2));
     cubeRotation += deltaTime;
+    
 
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
+}
+document.onmousemove = (event) => {
+  x = event.pageX;
+  y = event.pageY;
 }

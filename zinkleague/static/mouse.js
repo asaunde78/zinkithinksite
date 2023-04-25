@@ -26,3 +26,10 @@ socket.on('boo', (msg) => {
 
 
 });
+socket.on("remove", (msg) => {
+    console.log("DISCONNECTED")
+    let dot = document.getElementById(msg.id);
+    if (dot != null) {
+        dot.remove()
+    }
+});
