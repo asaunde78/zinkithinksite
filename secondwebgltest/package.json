@@ -1,0 +1,19 @@
+{
+  "name": "secondwebgltest",
+  "version": "1.0.0",
+  "description": "a multiplayer webgl test",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "multiplayer",
+    "webgl"
+  ],
+  "author": "Asher Saunders",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1"
+  }
+}

@@ -7,7 +7,7 @@ var playerObjects = {}
 var gl;
 var _x= 0
 var _z= 0
-socket.on("connect", (msg) => {
+socket.on("conn", (msg) => {
   // playerName = msg.id
   if(msg){
     if(myid == null) {

@@ -1,0 +1,41 @@
+const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
+
+const players = {};
+
+app.use(express.static(__dirname + 'public'));
+
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/index.html');
+});
+app.get('/webgl.js', function(req, res) {
+    res.sendFile(__dirname + '/webgl.js');
+});
+
+io.on('connection', function(socket) {
+    console.log('USER CONNECTED');
+    console.log(socket.id);
+    
+    players[socket.id] = {x: 0, y: 0, z: 0};
+    io.emit('conn', {yourid: socket.id, players: players});
+    
+    socket.on('new data', function(msg) {
+        players[socket.id] = {id: socket.id, x: msg.x, y: msg.y, z: msg.z};
+        io.emit('update', players[socket.id]);
+    });
+    
+    socket.on('disconnect', function() {
+        if (socket.id in players) {
+            delete players[socket.id];
+        }
+        io.emit('remove', {id: socket.id});
+        console.log('-------------DISCONNECT-------------');
+    });
+});
+
+const port = 6868;
+server.listen(port, function() {
+    console.log(`Server started on port ${port}`);
+});
