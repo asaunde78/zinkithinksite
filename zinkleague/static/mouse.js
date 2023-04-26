@@ -1,15 +1,14 @@
 var socket = io();
-
+var mouses = {};
+let dot = null;
 document.onmousemove = (event) => {
     socket.emit("new data",{"x":event.pageX,"y":event.pageY});
 } 
 
-socket.on('boo', (msg) => {
+socket.on('update', (msg) => {
     // console.log(msg);
-    let dot = document.getElementById(msg.id);
-
-    if (dot === null) {
-        // create dot
+    // console.log(!(msg.id in mouses))
+    if(!(msg.id in mouses)) {
         dot = document.createElement('div');
         dot.id = msg.id;
         dot.style.display = 'block';
@@ -19,6 +18,12 @@ socket.on('boo', (msg) => {
         dot.style.backgroundColor = 'blue';
         dot.style.borderRadius = '50%';
         document.body.append(dot);
+        mouses[msg.id] = dot
+        // console.log("created a new circle")
+    }
+    else {
+        dot = mouses[msg.id]
+        // console.log("used an existing circle")
     }
 
     dot.style.left = (msg.x - 10) + 'px';
@@ -28,8 +33,11 @@ socket.on('boo', (msg) => {
 });
 socket.on("remove", (msg) => {
     console.log("DISCONNECTED")
-    let dot = document.getElementById(msg.id);
+    dot = mouses[msg.id]
     if (dot != null) {
         dot.remove()
+    }
+    if(msg.id in mouses){
+        delete mouses[msg.id]
     }
 });
