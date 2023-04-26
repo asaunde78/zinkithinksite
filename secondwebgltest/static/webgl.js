@@ -17,7 +17,16 @@ socket.on("connect", (msg) => {
       console.log(playerObjects)
       msg.players
       playerObjects[msg.yourid] = false
+      
+      for (const [key, value] of Object.entries(msg.players)) {
+        // console.log(key, value);
+        if(value && key != myid) {
+          playerObjects[key] = new cube(key,[1,1,1,1],20,gl,[value.z,value.y,value.x])
+          
+        }
+      }
     }
+
     
   }
 
