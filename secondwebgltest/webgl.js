@@ -7,7 +7,17 @@ var playerObjects = {}
 var gl;
 var _x= 0
 var _z= 0
-socket.on("conn", (msg) => {
+var msg;
+socket.on("conn", (buffer) => {
+  
+  const bytes = new Uint8Array(buffer);
+
+  // convert the bytes to a string
+  const jsonString = new TextDecoder().decode(bytes);
+
+  // parse the JSON string into an object
+  const msg = JSON.parse(jsonString);
+  // msg = JSON.parse(buffer.toString("utf8"))
   // playerName = msg.id
   if(msg){
     if(myid == null) {
@@ -31,7 +41,14 @@ socket.on("conn", (msg) => {
   }
 
 })
-socket.on('update', (msg) => {
+socket.on('update', (buffer) => {
+  const bytes = new Uint8Array(buffer);
+
+  // convert the bytes to a string
+  const jsonString = new TextDecoder().decode(bytes);
+
+  // parse the JSON string into an object
+  const msg = JSON.parse(jsonString);
   // console.log(msg);
   // console.log(!(msg.id in mouses))
   console.log(msg.id, playerObjects)
