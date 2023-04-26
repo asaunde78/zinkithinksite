@@ -8,7 +8,7 @@ const players = {};
 var buffer;
 var buf;
 
-app.use(favicon(__dirname + '/favicon.ico'));
+app.use(favicon(__dirname + '/square.ico'));
 
 app.use(express.static(__dirname + 'public'));
 

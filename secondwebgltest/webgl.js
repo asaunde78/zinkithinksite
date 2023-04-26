@@ -215,7 +215,7 @@ function main() {
     
     // console.log({_x,_y})
     // var cameraPosition = [_x, _y, 60];
-    var cameraPosition = [50, 50, 60];
+    var cameraPosition = [70, 100, 70];
     // var target = [_x, _y, 50];
     var target = [0, 0, 50];
     
