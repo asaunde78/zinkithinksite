@@ -1,45 +1,53 @@
-<canvas id="canvas" width="800" height="600"></canvas>
-<div>fps: <span id="fps"></span></div>
-<div>(x,y): <span id="position"></span></div>
-<!-- vertex shader -->
-<script  id="vertex-shader-3d" type="x-shader/x-vertex">
-  attribute vec4 a_position;
-  attribute vec4 a_color;
+<html>
+  <head>
+    <title>
+      cube!!!
+    </title>
+  </head>>
+  <link rel="icon" href="favicon.ico">
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <div>fps: <span id="fps"></span></div>
+  <div>(x,y): <span id="position"></span></div>
+  <!-- vertex shader -->
+  <script  id="vertex-shader-3d" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    attribute vec4 a_color;
 
-  uniform mat4 u_matrix;
+    uniform mat4 u_matrix;
 
-  varying vec4 v_color;
+    varying vec4 v_color;
 
-  void main() {
-    // Multiply the position by the matrix.
-    gl_Position = u_matrix * a_position;
+    void main() {
+      // Multiply the position by the matrix.
+      gl_Position = u_matrix * a_position;
 
-    // Pass the color to the fragment shader.
-    v_color = a_color;
-  }
-</script>
-<!-- fragment shader -->
-<script  id="fragment-shader-3d" type="x-shader/x-fragment">
-  precision mediump float;
+      // Pass the color to the fragment shader.
+      v_color = a_color;
+    }
+  </script>
+  <!-- fragment shader -->
+  <script  id="fragment-shader-3d" type="x-shader/x-fragment">
+    precision mediump float;
 
-  // Passed in from the vertex shader.
-  varying vec4 v_color;
+    // Passed in from the vertex shader.
+    varying vec4 v_color;
 
-  uniform vec4 u_colorMult;
+    uniform vec4 u_colorMult;
 
-  void main() {
-    gl_FragColor = v_color * u_colorMult;
-  }
-</script><!--
-for most samples webgl-utils only provides shader compiling/linking and
-canvas resizing because why clutter the examples with code that's the same in every sample.
-See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
-and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-for webgl-utils, m3, m4, and webgl-lessons-ui.
--->
-<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
-<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
-<script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src= "webgl.js"></script>
+    void main() {
+      gl_FragColor = v_color * u_colorMult;
+    }
+  </script><!--
+  for most samples webgl-utils only provides shader compiling/linking and
+  canvas resizing because why clutter the examples with code that's the same in every sample.
+  See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
+  and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+  for webgl-utils, m3, m4, and webgl-lessons-ui.
+  -->
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src= "webgl.js"></script>
+</html>

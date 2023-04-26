@@ -58,6 +58,7 @@ socket.on('update', (buffer) => {
   if(!(msg.id in playerObjects)) {
     //make a new object
     // console.log("made a new player lol")
+    
     playerObjects[msg.id] = new cube(msg.id,[1,1,1,1],20,gl,[msg.z,msg.y,msg.x])
     // console.log(msg)
     
@@ -66,6 +67,7 @@ socket.on('update', (buffer) => {
     // console.log(msg)
     // console.log(playerObjects[msg.id])
     if(playerObjects[msg.id]) {
+      //USE INTERPOLATION HERE??
       playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
     }
       // dot = mouses[msg.id]
