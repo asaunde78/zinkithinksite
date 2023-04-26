@@ -51,7 +51,7 @@ socket.on('update', (buffer) => {
   const msg = JSON.parse(jsonString);
   // console.log(msg);
   // console.log(!(msg.id in mouses))
-  console.log(msg.id, playerObjects)
+  // console.log(msg.id, playerObjects)
   if(!(msg.id in playerObjects)) {
     //make a new object
     // console.log("made a new player lol")
