@@ -4,7 +4,8 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 //FIGURE OUT HOW TO OPTIMIZE SOCKET
 const players = {};
-
+var buffer;
+var buf;
 app.use(express.static(__dirname + 'public'));
 
 app.get('/', function(req, res) {
@@ -21,13 +22,13 @@ io.on('connection', function(socket) {
     
     players[socket.id] = {x: 0, y: 0, z: 0};
     //SEND DICTIONARIES AS BINARY INSTEAD OF DICTIONARIES AND PARSE IT LATER
-    var buffer = Buffer.from(JSON.stringify({yourid: socket.id, players: players}), "utf8")
+    buffer = Buffer.from(JSON.stringify({yourid: socket.id, players: players}), "utf8")
     // console.log(buffer)
     io.emit('conn', buffer);
     
     socket.on('new data', function(msg) {
         players[socket.id] = {id: socket.id, x: msg.x, y: msg.y, z: msg.z};
-        var buf = Buffer.from(JSON.stringify(players[socket.id]), "utf8")
+        buf = Buffer.from(JSON.stringify(players[socket.id]), "utf8")
         io.emit('update', buf);
     });
     
@@ -37,6 +38,7 @@ io.on('connection', function(socket) {
         }
         io.emit('remove', {id: socket.id});
         console.log('-------------DISCONNECT-------------');
+        console.log(Object.keys(players).length)
     });
 });
 

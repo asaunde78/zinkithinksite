@@ -1,30 +1,32 @@
 "use strict";
 var socket = io();
-var players = [];
+
 let dot = null;
 let myid = null
 var playerObjects = {}
 var gl;
 var _x= 0
 var _z= 0
-var msg;
+
+var bytes = 0;
+var jsonString ="";
+var msg = "";
 socket.on("conn", (buffer) => {
   
-  const bytes = new Uint8Array(buffer);
+  bytes = new Uint8Array(buffer);
 
   // convert the bytes to a string
-  const jsonString = new TextDecoder().decode(bytes);
+  jsonString = new TextDecoder().decode(bytes);
 
   // parse the JSON string into an object
-  const msg = JSON.parse(jsonString);
+  msg = JSON.parse(jsonString);
   // msg = JSON.parse(buffer.toString("utf8"))
   // playerName = msg.id
   if(msg){
     if(myid == null) {
       myid = msg.yourid
-      console.log(msg)
-      console.log(msg.yourid)
-      console.log(playerObjects)
+      // console.log(msg)
+      // console.log(msg.yourid)
       msg.players
       playerObjects[msg.yourid] = false
       
@@ -35,6 +37,7 @@ socket.on("conn", (buffer) => {
           
         }
       }
+      console.log(playerObjects)
     }
 
     
@@ -42,13 +45,13 @@ socket.on("conn", (buffer) => {
 
 })
 socket.on('update', (buffer) => {
-  const bytes = new Uint8Array(buffer);
+  bytes = new Uint8Array(buffer);
 
   // convert the bytes to a string
-  const jsonString = new TextDecoder().decode(bytes);
+  jsonString = new TextDecoder().decode(bytes);
 
   // parse the JSON string into an object
-  const msg = JSON.parse(jsonString);
+  msg = JSON.parse(jsonString);
   // console.log(msg);
   // console.log(!(msg.id in mouses))
   // console.log(msg.id, playerObjects)
@@ -74,10 +77,13 @@ socket.on('update', (buffer) => {
 });
 socket.on("remove", (msg) => {
   console.log("DISCONNECTED")
+  console.log(msg.id,playerObjects,msg.id in playerObjects)
   
   if(msg.id in playerObjects){
-      delete players[msg.id]
+    // console.log("TRYING TO DELETE")
+    delete playerObjects[msg.id]
   }
+  
 });
 window.addEventListener("beforeunload", function (e) {
   socket.emit("closing")
