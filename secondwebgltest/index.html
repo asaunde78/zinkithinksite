@@ -4,24 +4,33 @@
       cube!!!
     </title>
   </head>>
+  
   <link rel="icon" href="square.ico">
   <canvas id="canvas" width="800" height="600"></canvas>
+  <div id="uiContainer">
+    <div id="ui">
+    </div>
+  </div>
   <div>fps: <span id="fps"></span></div>
   <div>(x,y): <span id="position"></span></div>
   <!-- vertex shader -->
   <script  id="vertex-shader-3d" type="x-shader/x-vertex">
     attribute vec4 a_position;
+    attribute vec3 a_normal;
     attribute vec4 a_color;
+    
+    uniform mat4 u_projection;
+    uniform mat4 u_view;
+    uniform mat4 u_world;
+    uniform vec4 u_scale;
 
-    uniform mat4 u_matrix;
-
+    varying vec3 v_normal;
     varying vec4 v_color;
 
     void main() {
-      // Multiply the position by the matrix.
-      gl_Position = u_matrix * a_position;
-
-      // Pass the color to the fragment shader.
+      vec4 scaled = a_position * u_scale;
+      gl_Position = u_projection * u_view * u_world * scaled;
+      v_normal = mat3(u_world) * a_normal;
       v_color = a_color;
     }
   </script>
@@ -29,13 +38,17 @@
   <script  id="fragment-shader-3d" type="x-shader/x-fragment">
     precision mediump float;
 
-    // Passed in from the vertex shader.
+    varying vec3 v_normal;
     varying vec4 v_color;
 
-    uniform vec4 u_colorMult;
+    uniform vec4 u_diffuse;
+    uniform vec3 u_lightDirection;
 
-    void main() {
-      gl_FragColor = v_color * u_colorMult;
+    void main () {
+      vec3 normal = normalize(v_normal);
+      float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
+      vec4 diffuse = u_diffuse * v_color;
+      gl_FragColor = vec4(diffuse.rgb * fakeLight, diffuse.a);
     }
   </script><!--
   for most samples webgl-utils only provides shader compiling/linking and
@@ -49,5 +62,6 @@
   <script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
   <script src= "webgl.js"></script>
 </html>
