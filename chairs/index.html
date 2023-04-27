@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <title>
+      cube!!!
+    </title>
+  </head>
+  
+  <link rel="icon" href="square.ico">
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <div id="uiContainer">
+    <div id="ui">
+    </div>
+  </div>
+  <div>fps: <span id="fps"></span></div>
+  <div>(x,y): <span id="position"></span></div>
+  <!-- vertex shader -->
+  <script  id="vertex-shader-3d" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    attribute vec3 a_normal;
+    attribute vec4 a_color;
+    
+    uniform mat4 u_projection;
+    uniform mat4 u_view;
+    uniform mat4 u_world;
+    uniform vec4 u_scale;
+
+    varying vec3 v_normal;
+    varying vec4 v_color;
+
+    void main() {
+      vec4 scaled = a_position * u_scale;
+      gl_Position = u_projection * u_view * u_world * scaled;
+      v_normal = mat3(u_world) * a_normal;
+      v_color = a_color;
+    }
+  </script>
+  <!-- fragment shader -->
+  <script  id="fragment-shader-3d" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec3 v_normal;
+    varying vec4 v_color;
+
+    uniform vec4 u_diffuse;
+    uniform vec3 u_lightDirection;
+
+    void main () {
+      vec3 normal = normalize(v_normal);
+      float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
+      vec4 diffuse = u_diffuse * v_color;
+      gl_FragColor = vec4(diffuse.rgb * fakeLight, diffuse.a);
+    }
+  </script><!--
+  for most samples webgl-utils only provides shader compiling/linking and
+  canvas resizing because why clutter the examples with code that's the same in every sample.
+  See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
+  and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+  for webgl-utils, m3, m4, and webgl-lessons-ui.
+  -->
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+  <script src= "chairs/webgl.js"></script>
+</html>
