@@ -7,10 +7,13 @@ const io = require('socket.io')(server);
 
 ////CHAIRS 
 app.use(favicon(__dirname + '/chairs/square.ico'));
-
+app.use(express.static(__dirname + 'public'));
 app.use(express.static(__dirname + 'public/chairs'));
 app.use(express.static(__dirname + 'public/chairs/models'));
 
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/index.html');
+});
 app.get('/chairs', function(req, res) {
     res.sendFile(__dirname + '/chairs/index.html');
 });
