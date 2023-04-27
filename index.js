@@ -17,6 +17,9 @@ app.get('/', function(req, res) {
 app.get('/chairs', function(req, res) {
     res.sendFile(__dirname + '/chairs/index.html');
 });
+app.get('/pet', function(req, res) {
+    res.sendFile(__dirname + '/pet/index.html');
+});
 app.get('/chairs/webgl.js', function(req, res) {
     res.sendFile(__dirname + '/chairs/webgl.js');
 });
