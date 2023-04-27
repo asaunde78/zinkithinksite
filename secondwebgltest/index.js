@@ -37,6 +37,7 @@ io.on('connection', function(socket) {
     socket.on('new data', function(msg) {
         players[socket.id] = {id: socket.id, x: msg.x, y: msg.y, z: msg.z};
         buf = Buffer.from(JSON.stringify(players[socket.id]), "utf8")
+        // console.log(Object.keys(players).length)
         io.emit('update', buf);
     });
     

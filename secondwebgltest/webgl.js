@@ -2,7 +2,6 @@
 var socket = io();
 
 
-let dot = null;
 let myid = null
 var playerObjects = {}
 var gl;
@@ -528,7 +527,7 @@ async function pre() {
   // console.log(planeText)
   
 socket.on("conn", (buffer) => {
-  
+  console.log("connecting")
   bytes = new Uint8Array(buffer);
 
   // convert the bytes to a string
@@ -542,6 +541,7 @@ socket.on("conn", (buffer) => {
     
     if(myid == null) {
       myid = msg.yourid
+      console.log("INITIAL LOAD IN")
       // console.log(msg)
       // console.log(msg.yourid)
       msg.players
@@ -574,10 +574,10 @@ socket.on('update', (buffer) => {
   // console.log(msg);
   // console.log(!(msg.id in mouses))
   // console.log(msg.id, playerObjects)
-  if(msg.id && !(msg.id in playerObjects)) {
+  if(msg.id && !(msg.id in playerObjects) && msg.id != myid) {
     //make a new object
     // console.log("made a new player lol")
-    console.log(msg)
+    console.log("update",msg)
     playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
     // console.log(msg)
     
@@ -585,7 +585,7 @@ socket.on('update', (buffer) => {
   else {
     // console.log(msg)
     // console.log(playerObjects[msg.id])
-    if(playerObjects[msg.id]) {
+    if(playerObjects[msg.id] ) {
       //USE INTERPOLATION HERE??
       playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
     }
