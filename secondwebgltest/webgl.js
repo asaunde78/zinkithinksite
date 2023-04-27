@@ -4,6 +4,7 @@ var socket = io();
 
 let myid = null
 var playerObjects = {}
+var preload;
 var gl;
 var _x= 0
 var _z= 0
@@ -15,7 +16,34 @@ var msg = "";
 var canvas = document.querySelector("#canvas");
 gl = canvas.getContext("webgl");
 
+socket.on("conn", (buffer) => {
+  console.log("connecting")
+  bytes = new Uint8Array(buffer);
 
+  // convert the bytes to a string
+  jsonString = new TextDecoder().decode(bytes);
+
+  // parse the JSON string into an object
+  msg = JSON.parse(jsonString);
+  // msg = JSON.parse(buffer.toString("utf8"))
+  // playerName = msg.id
+  if(msg){
+    
+    if(myid == null) {
+      myid = msg.yourid
+      console.log("INITIAL LOAD IN")
+      // console.log(msg)
+      // console.log(msg.yourid)
+      
+      playerObjects[msg.yourid] = false
+      preload = msg.players
+      
+      // console.log(playerObjects)
+    }
+
+    
+  }
+})
 
 class gameObject {
   constructor(gl, name,startingPos){
@@ -360,7 +388,15 @@ async function main() {
   
   
 
-
+  for (const [key, value] of Object.entries(preload)) {
+    // console.log(key, value);
+    if(value && key != myid ) {
+      // console.log(value,key)
+      playerObjects[value.id] = new model(value.id,gl,[value.z,value.y,value.x],modelText,1)
+      
+    }
+  }
+  console.log("After loading: ",playerObjects)
   var Chair = new model("chair",gl,[0,0,0],modelText,1)
   var Book = new model("book",gl,[0,1,0],bookText, 10)
   // Book.setRot([0,Math.PI/2])
@@ -526,91 +562,55 @@ async function pre() {
   planeText = await response.text();
   // console.log(planeText)
   
-socket.on("conn", (buffer) => {
-  console.log("connecting")
-  bytes = new Uint8Array(buffer);
+  
+  socket.on('update', (buffer) => {
+    bytes = new Uint8Array(buffer);
 
-  // convert the bytes to a string
-  jsonString = new TextDecoder().decode(bytes);
+    // convert the bytes to a string
+    jsonString = new TextDecoder().decode(bytes);
 
-  // parse the JSON string into an object
-  msg = JSON.parse(jsonString);
-  // msg = JSON.parse(buffer.toString("utf8"))
-  // playerName = msg.id
-  if(msg){
-    
-    if(myid == null) {
-      myid = msg.yourid
-      console.log("INITIAL LOAD IN")
+    // parse the JSON string into an object
+    msg = JSON.parse(jsonString);
+    // console.log(msg);
+    // console.log(!(msg.id in mouses))
+    // console.log(msg.id, playerObjects)
+    if(msg.id && !(msg.id in playerObjects) && msg.id != myid) {
+      //make a new object
+      // console.log("made a new player lol")
+      console.log("update",msg)
+      playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
       // console.log(msg)
-      // console.log(msg.yourid)
-      msg.players
-      playerObjects[msg.yourid] = false
       
-      for (const [key, value] of Object.entries(msg.players)) {
-        // console.log(key, value);
-        
-        if(value && msg.id && key != myid ) {
-          console.log(msg.id)
-          playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
-          
-        }
+    }
+    else {
+      // console.log(msg)
+      // console.log(playerObjects[msg.id])
+      if(playerObjects[msg.id] ) {
+        //USE INTERPOLATION HERE??
+        playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
       }
-      // console.log(playerObjects)
+        // dot = mouses[msg.id]
+      // console.log("used an existing circle")
     }
+    //move the selected object
 
+
+  });
+  socket.on("remove", (msg) => {
+    console.log("DISCONNECTED")
+    console.log(msg.id,playerObjects,msg.id in playerObjects)
     
-  }
-
-})
-socket.on('update', (buffer) => {
-  bytes = new Uint8Array(buffer);
-
-  // convert the bytes to a string
-  jsonString = new TextDecoder().decode(bytes);
-
-  // parse the JSON string into an object
-  msg = JSON.parse(jsonString);
-  // console.log(msg);
-  // console.log(!(msg.id in mouses))
-  // console.log(msg.id, playerObjects)
-  if(msg.id && !(msg.id in playerObjects) && msg.id != myid) {
-    //make a new object
-    // console.log("made a new player lol")
-    console.log("update",msg)
-    playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
-    // console.log(msg)
-    
-  }
-  else {
-    // console.log(msg)
-    // console.log(playerObjects[msg.id])
-    if(playerObjects[msg.id] ) {
-      //USE INTERPOLATION HERE??
-      playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
+    if(msg.id in playerObjects){
+      // console.log("TRYING TO DELETE")
+      delete playerObjects[msg.id]
     }
-      // dot = mouses[msg.id]
-    // console.log("used an existing circle")
-  }
-  //move the selected object
-
-
-});
-socket.on("remove", (msg) => {
-  console.log("DISCONNECTED")
-  console.log(msg.id,playerObjects,msg.id in playerObjects)
-  
-  if(msg.id in playerObjects){
-    // console.log("TRYING TO DELETE")
-    delete playerObjects[msg.id]
-  }
-  
-});
-window.addEventListener("beforeunload", function (e) {
-  socket.emit("closing")
-});
-  
-  
+    
+  });
+  window.addEventListener("beforeunload", function (e) {
+    socket.emit("closing")
+  });
+    
+    
 }
 main()
 

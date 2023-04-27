@@ -28,7 +28,7 @@ io.on('connection', function(socket) {
     console.log(players)
     console.log(socket.id);
     
-    players[socket.id] = {x: 0, y: 0, z: 0};
+    players[socket.id] = {id:socket.id, x: 0, y: 0, z: 0};
     //SEND DICTIONARIES AS BINARY INSTEAD OF DICTIONARIES AND PARSE IT LATER
     buffer = Buffer.from(JSON.stringify({yourid: socket.id, players: players}), "utf8")
     // console.log(buffer)
