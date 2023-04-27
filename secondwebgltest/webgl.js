@@ -1,6 +1,7 @@
 "use strict";
 var socket = io();
 
+
 let dot = null;
 let myid = null
 var playerObjects = {}
@@ -163,7 +164,7 @@ class model extends gameObject {
     });
     this.extents = this.getGeometriesExtents(this.obj.geometries);
     this.range =  m4.subtractVectors(this.extents.max, this.extents.min);
-    console.log(this.extents.min)
+    // console.log(this.extents.min)
     this.objOffset = m4.scaleVector(
       m4.addVectors(
         this.extents.min,
@@ -401,7 +402,7 @@ function update() {
     
 }
 const data ={
-  height:0,
+  height:5,
 }
 async function main() {
   // Get A WebGL context
@@ -412,9 +413,8 @@ async function main() {
     return;
   }
   
-  
   webglLessonsUI.setupUI(document.querySelector("#ui"), data, [
-    { type: "slider",   key: "height", change:update, min: 0.001, max: 5, precision: 3, step: 0.001,},
+    { type: "slider",   key: "height", change:update, min: 0.000, max: 20, precision: 3, step: 0.001,},
   ]);
 
   // creates buffers with position, normal, texcoord, and vertex color
@@ -437,10 +437,15 @@ async function main() {
   var response = await fetch('https://webglfundamentals.org/webgl/resources/models/chair/chair.obj');  
   const modelText = await response.text();
   response = await fetch("https://webglfundamentals.org/webgl/resources/models/book-vertex-chameleon-study/book.obj")
+  
   const bookText = await response.text();
-  // console.log(modelText)
+  response = await fetch("/models/plane.obj")
+  const planeText = await response.text();
+  console.log(planeText)
+
   var Chair = new model("chair",gl,[0,0,0],modelText,1)
   var Book = new model("book",gl,[0,0,0],bookText, 10)
+  var Plane = new model("plane", gl,[0,0,0],planeText, 10)
   requestAnimationFrame(drawScene);
 
   let then = 0
@@ -500,10 +505,11 @@ async function main() {
     // });
     // Player.setPos([_z,10,_x])
     // Player.draw(programInfo, viewProjectionMatrix);
-    // Book.setPos([z+2,0,x+2])
+    Book.setPos([z+1,0,x+1])
     Book.draw(programInfo,viewMatrix,projectionMatrix, m4.normalize([-1, 3, 5]))
+    Plane.draw(programInfo,viewMatrix,projectionMatrix, m4.normalize([-1, 3, 5]))
+    Chair.setPos([z,0,x])
     
-    // Chair.setPos([z,0,x])
     Chair.draw(programInfo, viewMatrix, projectionMatrix, m4.normalize([-1, 3, 5]))
     
     // console.log(playerObjects[Object.keys(playerObjects)[0]])
@@ -550,7 +556,7 @@ window.onkeyup = function(e) {
 function checkKeys() {
   let x_change = 0;
   let z_change = 0;
-  let initSpeed = 1
+  let initSpeed = 0.2
   let speed = 0 
   if (keys[16]) {
       //shift
@@ -574,6 +580,12 @@ function checkKeys() {
   if (keys[68]) {
       //d
       x_change -= speed;
+  }
+  
+  if(x_change != 0  && z_change != 0) {
+    console.log("fixed")
+    x_change /= 1.41
+    z_change /= 1.41
   }
   x += x_change
   z -= z_change

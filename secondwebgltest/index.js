@@ -11,12 +11,16 @@ var buf;
 app.use(favicon(__dirname + '/square.ico'));
 
 app.use(express.static(__dirname + 'public'));
+app.use(express.static(__dirname + 'public/models'));
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 app.get('/webgl.js', function(req, res) {
     res.sendFile(__dirname + '/webgl.js');
+});
+app.get('/models/plane.obj', function(req, res) {
+    res.sendFile(__dirname + '/models/plane.obj');
 });
 
 io.on('connection', function(socket) {
