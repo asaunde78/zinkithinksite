@@ -409,9 +409,15 @@ async function main() {
     // console.log(key, value);
     if(value && key != myid ) {
       // console.log(value,key)
-      
+      console.log(value.data)
       playerObjects[value.id] = new model(value.id,gl,value.data.position ,modelText,1)
-      
+    
+      if(value.data.scale) {
+        playerObjects[value.id].setScale(value.data.scale)
+      }
+      if(value.data.rotation) {
+        playerObjects[value.id].setRot(value.data.rotation)
+      }
     }
   }
   console.log("After loading: ",playerObjects)
@@ -457,9 +463,9 @@ async function main() {
     
     
     var up = [0, 1, 0];
-    var cameraPosition = [10, data.height, 10];
+    var cameraPosition = [x+10, data.height, z+10];
     // var target = [_z, 10, _x];
-    var target = [0,0,0];
+    var target = [x,0,z];
     var cameraMatrix = m4.lookAt(cameraPosition, target, up);
 
     // Make a view matrix from the camera matrix.
