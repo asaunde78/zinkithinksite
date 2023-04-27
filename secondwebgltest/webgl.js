@@ -1,4 +1,7 @@
 "use strict";
+
+// import { emit } from "process";
+
 var socket = io();
 
 
@@ -58,6 +61,9 @@ class gameObject {
   setPos(position) {
     this.translation = position;
 
+  }
+  setScale(scale) {
+    this.scale = scale
   }
   setRot(rotation){
     this.rotation = rotation
@@ -354,12 +360,21 @@ class model extends gameObject {
   }
   
 }
-
+let prevSize = 0
+let prevRot = []
 function update() {
-    
+  if(prevSize != data.scale){
+    socket.emit("new data", {scale:data.scale})
+    prevSize = data.scale
+  }
+  if(prevRot != data.rotation) {
+    socket.emit("new data", {rotation:[0,data.rotation]})
+  }
 }
 const data ={
   height:5,
+  scale:1,
+  rotation:0,
 }
 async function main() {
   await pre()
@@ -368,7 +383,9 @@ async function main() {
   
   
   webglLessonsUI.setupUI(document.querySelector("#ui"), data, [
-    { type: "slider",   key: "height", change:update, min: 0.000, max: 20, precision: 3, step: 0.001,},
+    { type: "slider",   key: "height", change:update, min: 0.001, max: 20, precision: 3, step: 0.001,},
+    { type: "slider",   key: "scale", change:update, min: 0.01, max: 5, precision: 3, step: 0.001,},
+    { type: "slider",   key: "rotation", change:update, min: 0.01, max: 2*Math.PI, precision: 3, step: 0.001,},
   ]);
 
   // creates buffers with position, normal, texcoord, and vertex color
@@ -392,7 +409,8 @@ async function main() {
     // console.log(key, value);
     if(value && key != myid ) {
       // console.log(value,key)
-      playerObjects[value.id] = new model(value.id,gl,[value.z,value.y,value.x],modelText,1)
+      
+      playerObjects[value.id] = new model(value.id,gl,value.data.position ,modelText,1)
       
     }
   }
@@ -460,11 +478,13 @@ async function main() {
     // });
     // Player.setPos([_z,10,_x])
     // Player.draw(programInfo, viewProjectionMatrix);
-    Book.setPos([z,4,x])
+    Book.setPos([x,4,z])
     var lighting =  m4.normalize([-1, 3, 5])
     Book.draw(programInfo,viewMatrix,projectionMatrix,lighting)
     Plane.draw(programInfo,viewMatrix,projectionMatrix,lighting)
-    Chair.setPos([z,0,x])
+    Chair.setPos([x,0,z])
+    Chair.setRot([0,data.rotation])
+    Chair.setScale(data.scale)
     
     Chair.draw(programInfo, viewMatrix, projectionMatrix,lighting)
     
@@ -523,30 +543,30 @@ function checkKeys() {
 
   if (keys[87]) {
       //w
-      z_change += speed;
+      x_change += speed;
   }
   if (keys[83]) {
       //s
-      z_change -= speed;
+      x_change -= speed;
   }
   if (keys[65]) {
       //a
-      x_change += speed;
+      z_change += speed;
   }
   if (keys[68]) {
       //d
-      x_change -= speed;
+      z_change -= speed;
   }
   
   if(x_change != 0  && z_change != 0) {
     x_change /= 1.41
     z_change /= 1.41
   }
-  x += x_change
-  z -= z_change
+  z += z_change
+  x -= x_change
   
   let y = 0
-  socket.emit("new data",{"x":x,"y":y,"z":z});
+  socket.emit("new data",{position:[x,y,z]});
   // console.log({x,y})
 }
 var modelText= ""
@@ -577,17 +597,26 @@ async function pre() {
     if(msg.id && !(msg.id in playerObjects) && msg.id != myid) {
       //make a new object
       // console.log("made a new player lol")
-      console.log("update",msg)
-      playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
+      console.log("update",msg.data)
+      playerObjects[msg.id] = new model(msg.id,gl,msg.data.position,modelText,1)
       // console.log(msg)
       
     }
     else {
       // console.log(msg)
       // console.log(playerObjects[msg.id])
-      if(playerObjects[msg.id] ) {
+      if(playerObjects[msg.id]) {
         //USE INTERPOLATION HERE??
-        playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
+        
+        if(msg.data.position){
+          playerObjects[msg.id].setPos(msg.data.position)
+        }
+        if(msg.data.scale) {
+          playerObjects[msg.id].setScale(msg.data.scale)
+        }
+        if(msg.data.rotation) {
+          playerObjects[msg.id].setRot(msg.data.rotation)
+        }
       }
         // dot = mouses[msg.id]
       // console.log("used an existing circle")

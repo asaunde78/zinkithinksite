@@ -28,14 +28,22 @@ io.on('connection', function(socket) {
     console.log(players)
     console.log(socket.id);
     
-    players[socket.id] = {id:socket.id, x: 0, y: 0, z: 0};
+    players[socket.id] = {id:socket.id, 
+        data:{
+            position: [0,0,0]
+            }};
     //SEND DICTIONARIES AS BINARY INSTEAD OF DICTIONARIES AND PARSE IT LATER
     buffer = Buffer.from(JSON.stringify({yourid: socket.id, players: players}), "utf8")
     // console.log(buffer)
     io.emit('conn', buffer);
     
     socket.on('new data', function(msg) {
-        players[socket.id] = {id: socket.id, x: msg.x, y: msg.y, z: msg.z};
+        
+        for (const [key, value] of Object.entries(msg)) {
+            // console.log(key, value);
+            players[socket.id].data[key] = value
+        }
+        // players[socket.id] = {id: socket.id, data:msg.data};
         buf = Buffer.from(JSON.stringify(players[socket.id]), "utf8")
         // console.log(Object.keys(players).length)
         io.emit('update', buf);
