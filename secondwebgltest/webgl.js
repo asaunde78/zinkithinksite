@@ -12,6 +12,10 @@ var _z= 0
 var bytes = 0;
 var jsonString ="";
 var msg = "";
+
+var canvas = document.querySelector("#canvas");
+gl = canvas.getContext("webgl");
+
 socket.on("conn", (buffer) => {
   
   bytes = new Uint8Array(buffer);
@@ -24,6 +28,7 @@ socket.on("conn", (buffer) => {
   // msg = JSON.parse(buffer.toString("utf8"))
   // playerName = msg.id
   if(msg){
+    
     if(myid == null) {
       myid = msg.yourid
       // console.log(msg)
@@ -33,12 +38,14 @@ socket.on("conn", (buffer) => {
       
       for (const [key, value] of Object.entries(msg.players)) {
         // console.log(key, value);
-        if(value && key != myid) {
-          // playerObjects[key] = new cube(key,[1,1,1,1],20,gl,[value.z,value.y,value.x])
+        
+        if(value && msg.id && key != myid ) {
+          console.log(msg.id)
+          playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
           
         }
       }
-      console.log(playerObjects)
+      // console.log(playerObjects)
     }
 
     
@@ -56,11 +63,11 @@ socket.on('update', (buffer) => {
   // console.log(msg);
   // console.log(!(msg.id in mouses))
   // console.log(msg.id, playerObjects)
-  if(!(msg.id in playerObjects)) {
+  if(msg.id && !(msg.id in playerObjects)) {
     //make a new object
     // console.log("made a new player lol")
-    
-    // playerObjects[msg.id] = new cube(msg.id,[1,1,1,1],20,gl,[msg.z,msg.y,msg.x])
+    console.log(msg)
+    playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
     // console.log(msg)
     
   }
@@ -106,6 +113,9 @@ class gameObject {
   setPos(position) {
     this.translation = position;
 
+  }
+  setRot(rotation){
+    this.rotation = rotation
   }
   computeMatrix(matrixin, translation, xRotation, yRotation) {
     this.matrix = m4.translate(matrixin,
@@ -153,6 +163,8 @@ class model extends gameObject {
         // there are no vertex colors so just use constant white
         data.color = { value: [1, 1, 1, 1] };
       }
+      // console.log(data)
+      
       const bufferinfo = webglUtils.createBufferInfoFromArrays(this.gl, data);
       return {
         material: {
@@ -170,7 +182,7 @@ class model extends gameObject {
         this.extents.min,
         m4.scaleVector(this.range, 0.5)),
       -1);
-    console.log(this.objOffset)
+    // console.log(this.objOffset)
   }
   draw(programInfo, view, projection, lightDirection) {
     const sharedUniforms = {
@@ -405,13 +417,10 @@ const data ={
   height:5,
 }
 async function main() {
+  await pre()
   // Get A WebGL context
   /** @type {HTMLCanvasElement} */
-  var canvas = document.querySelector("#canvas");
-  gl = canvas.getContext("webgl");
-  if (!gl) {
-    return;
-  }
+  
   
   webglLessonsUI.setupUI(document.querySelector("#ui"), data, [
     { type: "slider",   key: "height", change:update, min: 0.000, max: 20, precision: 3, step: 0.001,},
@@ -433,18 +442,11 @@ async function main() {
   var cameraHeight = 50;
   
   
-  
-  var response = await fetch('https://webglfundamentals.org/webgl/resources/models/chair/chair.obj');  
-  const modelText = await response.text();
-  response = await fetch("https://webglfundamentals.org/webgl/resources/models/book-vertex-chameleon-study/book.obj")
-  
-  const bookText = await response.text();
-  response = await fetch("/models/plane.obj")
-  const planeText = await response.text();
-  console.log(planeText)
+
 
   var Chair = new model("chair",gl,[0,0,0],modelText,1)
-  var Book = new model("book",gl,[0,0,0],bookText, 10)
+  var Book = new model("book",gl,[0,1,0],bookText, 10)
+  // Book.setRot([0,Math.PI/2])
   var Plane = new model("plane", gl,[0,0,0],planeText, 10)
   requestAnimationFrame(drawScene);
 
@@ -505,12 +507,13 @@ async function main() {
     // });
     // Player.setPos([_z,10,_x])
     // Player.draw(programInfo, viewProjectionMatrix);
-    Book.setPos([z+1,0,x+1])
-    Book.draw(programInfo,viewMatrix,projectionMatrix, m4.normalize([-1, 3, 5]))
-    Plane.draw(programInfo,viewMatrix,projectionMatrix, m4.normalize([-1, 3, 5]))
+    Book.setPos([z,4,x])
+    var lighting =  m4.normalize([-1, 3, 5])
+    Book.draw(programInfo,viewMatrix,projectionMatrix,lighting)
+    Plane.draw(programInfo,viewMatrix,projectionMatrix,lighting)
     Chair.setPos([z,0,x])
     
-    Chair.draw(programInfo, viewMatrix, projectionMatrix, m4.normalize([-1, 3, 5]))
+    Chair.draw(programInfo, viewMatrix, projectionMatrix,lighting)
     
     // console.log(playerObjects[Object.keys(playerObjects)[0]])
     
@@ -521,12 +524,12 @@ async function main() {
     //   playerObjects[p].draw(programInfo, viewProjectionMatrix)
     // })
 
-    // for (const [key, value] of Object.entries(playerObjects)) {
-    //   // console.log(key, value);
-    //   if(value) {
-    //     value.draw(programInfo, viewProjectionMatrix)
-    //   }
-    // }
+    for (const [key, value] of Object.entries(playerObjects)) {
+      // console.log(key, value);
+      if(value) {
+        value.draw(programInfo, viewMatrix, projectionMatrix,lighting)
+      }
+    }
 
     // Squire.draw(programInfo,viewProjectionMatrix);
     // Map.draw(programInfo,viewProjectionMatrix);
@@ -583,15 +586,30 @@ function checkKeys() {
   }
   
   if(x_change != 0  && z_change != 0) {
-    console.log("fixed")
     x_change /= 1.41
     z_change /= 1.41
   }
   x += x_change
   z -= z_change
   
-  let y = 10
+  let y = 0
   socket.emit("new data",{"x":x,"y":y,"z":z});
   // console.log({x,y})
 }
-main();
+var modelText= ""
+var bookText = ""
+var planeText; 
+async function pre() {
+  var response = await fetch('https://webglfundamentals.org/webgl/resources/models/chair/chair.obj');  
+  modelText = await response.text();
+  response = await fetch("https://webglfundamentals.org/webgl/resources/models/book-vertex-chameleon-study/book.obj")
+  
+  bookText= await response.text();
+  response = await fetch("/models/plane.obj")
+  planeText = await response.text();
+  // console.log(planeText)
+  
+  
+}
+main()
+
