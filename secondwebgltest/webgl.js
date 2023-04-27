@@ -16,88 +16,6 @@ var msg = "";
 var canvas = document.querySelector("#canvas");
 gl = canvas.getContext("webgl");
 
-socket.on("conn", (buffer) => {
-  
-  bytes = new Uint8Array(buffer);
-
-  // convert the bytes to a string
-  jsonString = new TextDecoder().decode(bytes);
-
-  // parse the JSON string into an object
-  msg = JSON.parse(jsonString);
-  // msg = JSON.parse(buffer.toString("utf8"))
-  // playerName = msg.id
-  if(msg){
-    
-    if(myid == null) {
-      myid = msg.yourid
-      // console.log(msg)
-      // console.log(msg.yourid)
-      msg.players
-      playerObjects[msg.yourid] = false
-      
-      for (const [key, value] of Object.entries(msg.players)) {
-        // console.log(key, value);
-        
-        if(value && msg.id && key != myid ) {
-          console.log(msg.id)
-          playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
-          
-        }
-      }
-      // console.log(playerObjects)
-    }
-
-    
-  }
-
-})
-socket.on('update', (buffer) => {
-  bytes = new Uint8Array(buffer);
-
-  // convert the bytes to a string
-  jsonString = new TextDecoder().decode(bytes);
-
-  // parse the JSON string into an object
-  msg = JSON.parse(jsonString);
-  // console.log(msg);
-  // console.log(!(msg.id in mouses))
-  // console.log(msg.id, playerObjects)
-  if(msg.id && !(msg.id in playerObjects)) {
-    //make a new object
-    // console.log("made a new player lol")
-    console.log(msg)
-    playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
-    // console.log(msg)
-    
-  }
-  else {
-    // console.log(msg)
-    // console.log(playerObjects[msg.id])
-    if(playerObjects[msg.id]) {
-      //USE INTERPOLATION HERE??
-      playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
-    }
-      // dot = mouses[msg.id]
-    // console.log("used an existing circle")
-  }
-  //move the selected object
-
-
-});
-socket.on("remove", (msg) => {
-  console.log("DISCONNECTED")
-  console.log(msg.id,playerObjects,msg.id in playerObjects)
-  
-  if(msg.id in playerObjects){
-    // console.log("TRYING TO DELETE")
-    delete playerObjects[msg.id]
-  }
-  
-});
-window.addEventListener("beforeunload", function (e) {
-  socket.emit("closing")
-});
 
 
 class gameObject {
@@ -608,6 +526,89 @@ async function pre() {
   response = await fetch("/models/plane.obj")
   planeText = await response.text();
   // console.log(planeText)
+  
+socket.on("conn", (buffer) => {
+  
+  bytes = new Uint8Array(buffer);
+
+  // convert the bytes to a string
+  jsonString = new TextDecoder().decode(bytes);
+
+  // parse the JSON string into an object
+  msg = JSON.parse(jsonString);
+  // msg = JSON.parse(buffer.toString("utf8"))
+  // playerName = msg.id
+  if(msg){
+    
+    if(myid == null) {
+      myid = msg.yourid
+      // console.log(msg)
+      // console.log(msg.yourid)
+      msg.players
+      playerObjects[msg.yourid] = false
+      
+      for (const [key, value] of Object.entries(msg.players)) {
+        // console.log(key, value);
+        
+        if(value && msg.id && key != myid ) {
+          console.log(msg.id)
+          playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
+          
+        }
+      }
+      // console.log(playerObjects)
+    }
+
+    
+  }
+
+})
+socket.on('update', (buffer) => {
+  bytes = new Uint8Array(buffer);
+
+  // convert the bytes to a string
+  jsonString = new TextDecoder().decode(bytes);
+
+  // parse the JSON string into an object
+  msg = JSON.parse(jsonString);
+  // console.log(msg);
+  // console.log(!(msg.id in mouses))
+  // console.log(msg.id, playerObjects)
+  if(msg.id && !(msg.id in playerObjects)) {
+    //make a new object
+    // console.log("made a new player lol")
+    console.log(msg)
+    playerObjects[msg.id] = new model(msg.id,gl,[msg.z,msg.y,msg.x],modelText,1)
+    // console.log(msg)
+    
+  }
+  else {
+    // console.log(msg)
+    // console.log(playerObjects[msg.id])
+    if(playerObjects[msg.id]) {
+      //USE INTERPOLATION HERE??
+      playerObjects[msg.id].setPos([msg.z,msg.y,msg.x])
+    }
+      // dot = mouses[msg.id]
+    // console.log("used an existing circle")
+  }
+  //move the selected object
+
+
+});
+socket.on("remove", (msg) => {
+  console.log("DISCONNECTED")
+  console.log(msg.id,playerObjects,msg.id in playerObjects)
+  
+  if(msg.id in playerObjects){
+    // console.log("TRYING TO DELETE")
+    delete playerObjects[msg.id]
+  }
+  
+});
+window.addEventListener("beforeunload", function (e) {
+  socket.emit("closing")
+});
   
   
 }
