@@ -459,6 +459,8 @@ const data ={
   scale:1.3,
   rotation:0,
   distance:80,
+  amplitude:10,
+  period:10,
 }
 async function main() {
   await pre()
@@ -470,6 +472,8 @@ async function main() {
     { type: "slider",   key: "scale", change:update, min: 0.01, max: 5, precision: 3, step: 0.001,},
     { type: "slider",   key: "rotation", change:update, min: 0.01, max: 2*Math.PI, precision: 3, step: 0.001,},
     { type: "slider",   key: "distance", change:update, min: 10, max: 100, precision: 3, step: 0.001,},
+    { type: "slider",   key: "amplitude", change:update, min: 0, max: 50, precision: 3, step: 0.001,},
+    { type: "slider",   key: "period", change:update, min: 0, max: 100, precision: 3, step: 0.001,},
   ]);
 
   // creates buffers with position, normal, texcoord, and vertex color
@@ -543,7 +547,7 @@ async function main() {
     
     var lighting =  m4.normalize([-1, 3, 5])
     
-    Dog.setPos([0,0,0])
+    Dog.setPos([0,data.amplitude*Math.sin(now*data.period),0])
     Dog.setRot([0,data.rotation])
     Dog.setScale(data.scale)
     Dog.draw(programInfo, viewMatrix, projectionMatrix,lighting,cameraPosition)
