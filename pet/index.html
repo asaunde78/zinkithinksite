@@ -1,4 +1,9 @@
 <title>pet project</title>
+<canvas id="canvas" width="800" height="600"></canvas>
+<div id="uiContainer">
+    <div id="ui">
+    </div>
+  </div>
 <h1>Doggy:</h1>
 <img src="https://media.discordapp.net/attachments/644752766736138241/1101048146353733703/simple-cat-drawing-web.png?" width="200" height="200"></img>
 <br></br>
@@ -14,3 +19,79 @@
         alert("Well done! You've watered the dog ;3");
     }
 </script>
+<!-- vertex shader -->
+<script  id="vertex-shader-3d" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    attribute vec3 a_normal;
+    attribute vec2 a_texcoord;
+    attribute vec4 a_color;
+
+    uniform mat4 u_projection;
+    uniform mat4 u_view;
+    uniform mat4 u_world;
+    uniform vec3 u_viewWorldPosition;
+    uniform vec4 u_scale;
+
+    varying vec3 v_normal;
+    varying vec3 v_surfaceToView;
+    varying vec2 v_texcoord;
+    varying vec4 v_color;
+
+    void main() {
+        vec4 scaled = a_position * u_scale;
+        vec4 worldPosition = u_world * scaled;
+        gl_Position = u_projection * u_view * worldPosition;
+        v_surfaceToView = u_viewWorldPosition - worldPosition.xyz;
+        v_normal = mat3(u_world) * a_normal;
+        v_texcoord = a_texcoord;
+        v_color = a_color;
+    }
+  </script>
+  <!-- fragment shader -->
+  <script  id="fragment-shader-3d" type="x-shader/x-fragment">
+    precision highp float;
+
+    varying vec3 v_normal;
+    varying vec3 v_surfaceToView;
+    varying vec2 v_texcoord;
+    varying vec4 v_color;
+
+    uniform vec3 diffuse;
+    uniform sampler2D diffuseMap;
+    uniform vec3 ambient;
+    uniform vec3 emissive;
+    uniform vec3 specular;
+    uniform float shininess;
+    uniform float opacity;
+    uniform vec3 u_lightDirection;
+    uniform vec3 u_ambientLight;
+
+    void main () {
+        vec3 normal = normalize(v_normal);
+
+        vec3 surfaceToViewDirection = normalize(v_surfaceToView);
+        vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
+
+        float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
+        float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
+
+        vec4 diffuseMapColor = texture2D(diffuseMap, v_texcoord);
+        vec3 effectiveDiffuse = diffuse * diffuseMapColor.rgb * v_color.rgb;
+        float effectiveOpacity = opacity * diffuseMapColor.a * v_color.a;
+
+        gl_FragColor = vec4(
+            emissive +
+            ambient * u_ambientLight +
+            effectiveDiffuse * fakeLight +
+            specular * pow(specularLight, shininess),
+            effectiveOpacity);
+    }
+  </script>
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m3.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+<script src= "pet/webgl.js"></script>
