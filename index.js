@@ -1,6 +1,6 @@
 const favicon = require('serve-favicon');
 const express = require('express');
-
+const path = require("path");
 // var gzipStatic = require('connect-gzip-static');
 // var oneDay = 86400000;
 
@@ -13,17 +13,43 @@ const io = require('socket.io')(server);
 
 
 app.get('/', function(req, res) {
+    console.log(req)
     res.sendFile(__dirname + '/index.html');
 });
 
 
 //FIGURE OUT HOW TO OPTIMIZE SOCKET
 ////UNITY
-app.use("/unity", express.static('unity'))
-app.get("/unity", function(req,res) {
+app.get("/unity/Build/*.gz", function(req,res) {
     // console.log(req)
-    res.sendFile(__dirname + '/unity/index.html');
+    // res.send("HI")
+    console.log("Filename:",path.basename(req.path))
+    if(path.basename(req.path).includes(".data")) {
+        
+        console.log("Encoding for .data")
+        res.set('Content-Type', 'application/octet-stream');
+    }
+    if(path.basename(req.path).includes(".wasm")) {
+        console.log("Encoding for .wasm")
+        res.set('Content-Type', 'application/wasm');
+        
+    }
+    // if(extensionFile === '.data' || extensionFile === '.mem'){
+    //     res.header('Content-Type', 'application/octet-stream');
+    // }
+    res.set('Content-Encoding', 'gzip');
+    // console.log("RESOLVE?", __dirname +req.path)
+    // console.log(res)
+    res.sendFile(__dirname + req.path);
 });
+app.use("/unity", express.static('unity'), function(req,res) {
+    console.log(req)
+});
+// app.get("/unity", function(req,res) {
+//     console.log(req)
+//     res.sendFile(__dirname + '/unity/index.html');
+// });
+
 
 ////PET
 app.use("/pet", express.static('pet'))
