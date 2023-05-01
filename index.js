@@ -1,50 +1,47 @@
 const favicon = require('serve-favicon');
 const express = require('express');
+
+// var gzipStatic = require('connect-gzip-static');
+// var oneDay = 86400000;
+
+// connect()
+//   .use(gzipStatic(__dirname + '/public'))
+
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
+
+
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
+
+
 //FIGURE OUT HOW TO OPTIMIZE SOCKET
+////UNITY
+app.use("/unity", express.static('unity'))
+app.get("/unity", function(req,res) {
+    // console.log(req)
+    res.sendFile(__dirname + '/unity/index.html');
+});
 
 ////PET
+app.use("/pet", express.static('pet'))
 app.get('/pet', function(req, res) {
     res.sendFile(__dirname + '/pet/index.html');
 });
-app.get('/pet/webgl.js', function(req, res) {
-    res.sendFile(__dirname + '/pet/webgl.js');
-});
-app.get('/pet/models/dog.obj', function(req, res) {
-    res.sendFile(__dirname + '/pet/models/dog.obj');
-});
-app.get('/pet/models/dog.mtl', function(req, res) {
-    res.sendFile(__dirname + '/pet/models/dog.mtl');
-});
-app.get('/pet/models/Dog_diffuse.jpg', function(req, res) {
-    res.sendFile(__dirname + '/pet/models/Dog_diffuse.jpg');
-});
-app.get('/pet/models/Dog_bump.jpg', function(req, res) {
-    res.sendFile(__dirname + '/pet/models/Dog_bump.jpg');
-});
+
 ////CHAIRS 
 app.use(favicon(__dirname + '/chairs/square.ico'));
-app.use(express.static(__dirname + 'public'));
-app.use(express.static(__dirname + 'public/chairs'));
-app.use(express.static(__dirname + 'public/chairs/models'));
+app.get('/chairs/square.ico', function(req, res) {
+    res.sendFile(__dirname + '/chairs/square.ico');
+});
 
-
+app.use("/chairs", express.static("chairs"))
 app.get('/chairs', function(req, res) {
     res.sendFile(__dirname + '/chairs/index.html');
 });
 
-app.get('/chairs/webgl.js', function(req, res) {
-    res.sendFile(__dirname + '/chairs/webgl.js');
-});
-
-app.get('/chairs/models/plane.obj', function(req, res) {
-    res.sendFile(__dirname + '/chairs/models/plane.obj');
-});
 const chairsNamespace = io.of("/chairs")
 const players = {};
 var buffer;
