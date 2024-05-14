@@ -1,6 +1,15 @@
 const favicon = require('serve-favicon');
 const express = require('express');
 const path = require("path");
+const { MongoClient, SecureApiVersion } = require("mongodb")
+
+const client = new MongoClient( "mongodb://localhost:27017");
+client.connect()
+    .then( () => {
+        console.log("MongoDB Connected!")
+        // client.db("details").collection("pokemon").findOne().then( (poke) => console.log(poke))
+        
+    })
 // var gzipStatic = require('connect-gzip-static');
 // var oneDay = 86400000;
 
@@ -111,8 +120,61 @@ chairsNamespace.on('connection', function(socket) {
 });
 
 ////END CHAIRS
+app.get("/pokemon/search/",  (req, res) => {
+    // client.db("details").collection("pokemon").aggregate(
+    //     [{$sample: {size:1}}]
+    // ).toArray().then( (arr) => {
+    //     // console.log(arr)
+    //     res.send(arr)
+    // })
+    console.log("search", req.params, req.query)
+    
+    console.log(req.query.type)
+    query = {
+        type: {$all:Array(req.query.type)}
+    }
+    if(req.query.onetype != null) {
+        query.type.$size = 1
+    }
+    console.log(query)
+    client.db("details").collection("pokemon").find(
+        query
+    ).toArray().then( (arr) => {
+        // console.log(arr)
+        res.send(arr)
+    })
+    
+        //.then( (poke) => res.send(poke))
+    
+    
+    
+}) 
 
+app.get("/pokemon/:pokename",  (req, res) => {
+    // client.db("details").collection("pokemon").aggregate(
+    //     [{$sample: {size:1}}]
+    // ).toArray().then( (arr) => {
+    //     // console.log(arr)
+    //     res.send(arr)
+    // })
+    console.log(req.params, req.query)
+    console.log(req.params.pokename)
 
+    query = {
+
+    }
+    client.db("details").collection("pokemon").find(
+        {name: req.params.pokename}
+    ).toArray().then( (arr) => {
+        // console.log(arr)
+        res.send(arr)
+    })
+    
+        //.then( (poke) => res.send(poke))
+    
+    
+    
+}) 
 
 const port = 6868;
 server.listen(port, function() {
