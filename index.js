@@ -141,7 +141,7 @@ app.get("/pokemon/search/",  (req, res) => {
         query
     ).toArray().then( (arr) => {
         // console.log(arr)
-        res.send(arr)
+        res.send(arr.map( (elem) => elem.name))
     })
     
         //.then( (poke) => res.send(poke))
