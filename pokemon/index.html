@@ -2,33 +2,227 @@
 <html>
     <head>
         <title>pokemon</title>
-        <h1>POKEMON</h1>
+        
+        <meta name="viewport" content ="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        
+        <style>
+            * {
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                overscroll-behavior: none;
+            }
+            .search {
+                position:absolute;
+                z-index: 2;
+            }
+            #content {
+                position:absolute;
+                top: 0; width: 100%;
+                z-index: 1;
+                padding: 3em 0 0 0;
+            }
+            #canvas {
+                position: absolute;
+                left:0;
+                width:100%;
+                height: 100%;
+            }
+            .card-item{
+                display: inline-block;
+                position:absolute;
+                
+            }
+            .card-item  > :nth-child(1){
+    
+                width:300px;
+                height:600px;
+            }
+        </style>
     </head>
     <body>
-        <input id="searchbar" type="text">
         
-        <button onclick="search()"></button>
         
-        <div id = "display"></div>
+        <canvas id = "canvas"></canvas>
+        <div id="content"></div>
+        <input class="search" id="searchbar" type="text">
+        
+        <button class="search" id="searchbutton"></button>
+        <script type="importmap">
+            {
+              "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@v0.164.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.164.0/examples/jsm/"
+              }
+            }
+        </script>
+        <script type="module">
+            
+            import * as three from 'three';
+            import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        <script>
-            let bar = document.getElementById("searchbar")
-            let output = document.getElementById("display")
+
+            const bar = document.getElementById("searchbar")
+            let canvas,renderer
+            const button = document.getElementById("searchbutton")
+            
+            // const scene = new three.Scene({Color:0xffffff})
+            // const camera = new three.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            var scenes = [];
+            
+
+            // const geometry = new three.BoxGeometry(1,1,1)
+            // const material = new three.MeshBasicMaterial( {color:0x00ff00})
+            // const cube = new three.Mesh(geometry, material);
+            // scene.add(cube)
+            // camera.position.z = 5
+
+            const textureLoader = new three.TextureLoader()
+            textureLoader.crossOrigin = "Anonymous"
+            function init() {
+                
+                canvas = document.getElementById("canvas")
+
+                renderer = new three.WebGLRenderer({canvas:canvas, antialias:true})
+                // renderer.setSize( window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0xffffff, 1)
+                renderer.setPixelRatio(window.devicePixelRatio*4)
+                renderer.setAnimationLoop( animate );
+
+                // document.body.appendChild( renderer.domElement);
+            }
+            function updateSize() {
+                var width = canvas.clientWidth;
+                var height = canvas.clientHeight;
+                if (canvas.width !== width || canvas.height !== height) {
+                    renderer.setSize(width,height,false)
+                }
+            }
+            
+            function animate() {
+                updateSize()
+                canvas.style.transform = `translateY(${window.scrollY}px)`
+
+                renderer.setClearColor(0xffffff, 0);
+                renderer.setScissorTest(false)
+                renderer.clear();
+
+                renderer.setClearColor(0xa0a0a0, 0)
+                renderer.setScissorTest(true)
+                // cube.rotation.x += 0.01
+                // cube.rotation.y += 0.01
+                // scene.children.forEach( (child, idx) => {
+                //     child.position.x = (idx*1.5)%size - 5
+                //     child.position.y = -2.5*parseInt((idx*1.5)/size) + 2
+                //     console.log(child.position.z)
+                //     // child.rotation.x += 0.01
+                //     child.rotation.y = Math.sin((now +idx)*.001 )/2
+                // })
+                // console.log(scenes)
+                scenes.forEach( (scene, idx) => {
+                    // scene.children[0].rotation.y = Math.sin(Date.now*0.001)/2
+                    scene.children[0].rotation.y = Math.cos(Date.now()*0.001)/4
+                    // console.log("turned?")
+                    var element = scene.userData.element;
+                    var rect = element.getBoundingClientRect();
+                    
+                    if(rect.bottom < 0 || rect.top > renderer.domElement.clientHeight || rect.right < 0 || rect.left > renderer.domElement.clientWidth) {
+                        return
+                    }
+                    
+                    var width = rect.right - rect.left;
+                    var height = rect.bottom - rect.top;
+                    var left = rect.left;
+                    var bottom = renderer.domElement.clientHeight - rect.bottom;
+
+                    renderer.setViewport(left, bottom, width, height)
+                    renderer.setScissor(left, bottom, width, height)
+
+                    var camera = scene.userData.camera
+                    // if(idx==0) {
+                    //     console.log("scene: ", scene)
+                        // console.log(camera, scene.userData.element)
+                    // }
+                        
+                    
+                    renderer.render(scene,camera);
+                    
+                })
+                
+
+            }
+            init()
+            
+            // search()
+            // animate()
+            button.addEventListener("click", search)
             function search() {
+                scenes=[]
+                var content = document.getElementById("content")
+                content.innerHTML=""
                 fetch('/api/pokemon/search?' + bar.value)
                 .then( (res) => res.json())
                 .then( pokemon => {
                     console.log(pokemon)
-                    output.innerHTML = ''
-                    pokemon.forEach( (p) => {
+                    
+                    pokemon.forEach( (p, idx) => {
                         
-                        let n = document.createElement("div")
-                        n.style = "display:inline"
-                        let img = document.createElement("img")
-                        img.src = p.image
-                        img.style = "width:15%;"
-                        n.appendChild(img)
-                        output.appendChild(n)
+                        // let n = document.createElement("div")
+                        // n.style = "display:inline"
+                        // let img = document.createElement("img")
+                        // img.src = p.image
+                        // img.style = "width:15%;"
+
+                        // n.appendChild(img)
+                        // output.appendChild(n)
+
+                        var scene = new three.Scene()
+                        var elem = document.createElement("div")
+                        var inside = document.createElement('div')
+                        elem.className = "card-item"
+                        
+                        elem.id = p.name + (idx+1)
+                        // elem.style = "width 200px; height:200px;"
+                        
+                        scene.userData.element = inside
+                        let size = 300
+                        let wid = 2100
+                        let heig = 600
+                        inside.style = `left:${(idx*size)%wid}px;position:absolute;top:${heig*parseInt(idx*size/wid)}px;`
+                        
+                        elem.appendChild(inside)
+                        // console.log(inside)
+                        content.appendChild(elem)
+                        
+
+                        var camera = new three.PerspectiveCamera(50, 0.5,.1,100)
+                        camera.position.z = 3
+                        scene.userData.camera = camera
+
+
+                        const controls = new OrbitControls( scene.userData.camera, scene.userData.element );
+                        controls.minDistance = 2;
+                        controls.maxDistance = 5;
+                        controls.enablePan = false;
+                        controls.enableZoom = false;
+                        scene.userData.controls = controls;
+
+                        let texture = textureLoader.load(p.image)
+                        let temp = new three.Mesh(new three.PlaneGeometry(1,2), new three.MeshBasicMaterial( {map:texture, transparent:true}))
+                        // let temp = new three.Mesh(new three.BoxGeometry(1,1,1), new three.MeshBasicMaterial( {color: 0x000000}))
+                        scene.add(temp)
+
+                        // scene.add( new three.HemisphereLight( 0xaaaaaa, 0x444444, 3 ) );
+
+                        // const light = new three.DirectionalLight( 0xffffff, 1.5 );
+                        // light.position.set( 1, 1, 1 );
+                        // scene.add( light );
+                        
+                        // console.log(scene, camera)
+                        scenes.push(scene)   
+                        // console.log(scene)
                     })
                 })
 
