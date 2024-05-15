@@ -120,7 +120,13 @@ chairsNamespace.on('connection', function(socket) {
 });
 
 ////END CHAIRS
-app.get("/pokemon/search/",  (req, res) => {
+app.use("/pokemon", express.static('pokemon'))
+app.get('/pokemon', function(req, res) {
+    res.sendFile(__dirname + '/pokemon/index.html');
+});
+
+
+app.get("/api/pokemon/search/",  (req, res) => {
     // client.db("details").collection("pokemon").aggregate(
     //     [{$sample: {size:1}}]
     // ).toArray().then( (arr) => {
@@ -141,7 +147,22 @@ app.get("/pokemon/search/",  (req, res) => {
         query
     ).toArray().then( (arr) => {
         // console.log(arr)
-        res.send(arr.map( (elem) => elem.name))
+        res.send(arr.map( (elem) => {
+            let i = ""
+            try {
+                i = elem.sprites.other["official-artwork"].front_default
+                // console.log(i)
+            }
+            catch {
+                i = "Not Found."
+            }
+            return {
+                name : elem.name, 
+                type : elem.type,
+                image: i
+
+            }
+        }))
     })
     
         //.then( (poke) => res.send(poke))
@@ -150,7 +171,7 @@ app.get("/pokemon/search/",  (req, res) => {
     
 }) 
 
-app.get("/pokemon/:pokename",  (req, res) => {
+app.get("/api/pokemon/:pokename",  (req, res) => {
     // client.db("details").collection("pokemon").aggregate(
     //     [{$sample: {size:1}}]
     // ).toArray().then( (arr) => {

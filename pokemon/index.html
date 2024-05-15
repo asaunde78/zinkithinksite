@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>pokemon</title>
+        <h1>POKEMON</h1>
+    </head>
+    <body>
+        <input id="searchbar" type="text">
+        
+        <button onclick="search()"></button>
+        
+        <div id = "display"></div>
+
+        <script>
+            let bar = document.getElementById("searchbar")
+            let output = document.getElementById("display")
+            function search() {
+                fetch('/api/pokemon/search?' + bar.value)
+                .then( (res) => res.json())
+                .then( pokemon => {
+                    console.log(pokemon)
+                    output.innerHTML = ''
+                    pokemon.forEach( (p) => {
+                        
+                        let n = document.createElement("div")
+                        let img = document.createElement("img")
+                        img.src = p.image
+                        n.appendChild(img)
+                        output.appendChild(n)
+                    })
+                })
+
+            }
+        </script>
+        
+        
+        <script src= "pokemon.js"></script>
+    </body>
+</html>
+
