@@ -150,7 +150,8 @@ app.get("/api/pokemon/search/",  (req, res) => {
         res.send(arr.map( (elem) => {
             let i = ""
             try {
-                i = elem.sprites.other["official-artwork"].front_default
+                // i = elem.sprites.other["official-artwork"].front_default
+                i = elem.card_data[0].images.large
                 // console.log(i)
             }
             catch {

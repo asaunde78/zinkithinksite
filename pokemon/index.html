@@ -23,8 +23,10 @@
                     pokemon.forEach( (p) => {
                         
                         let n = document.createElement("div")
+                        n.style = "display:inline"
                         let img = document.createElement("img")
                         img.src = p.image
+                        img.style = "width:15%;"
                         n.appendChild(img)
                         output.appendChild(n)
                     })
