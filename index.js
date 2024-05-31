@@ -2,6 +2,8 @@ const favicon = require('serve-favicon');
 const express = require('express');
 const path = require("path");
 const axios = require("axios")
+
+const querystring = require("node:querystring")
 require("dotenv").config()
 
 const cookieParser =require("cookie-parser")
@@ -239,11 +241,109 @@ app.get("/auth/discord", async(req, res)=> {
     } 
 })
 
+app.get("/spotify/login", async(req, res)=> {
+    // console.log(res)
+    const scope = "user-library-read user-read-email playlist-read-private"
+    
+    // params.append("client_secret", process.env.SPOTIFY_CLIENT_SECRET)
+    
+    try {
+        res.redirect("https://accounts.spotify.com/authorize?" + 
+            querystring.stringify({
+                response_type: 'code',
+                client_id: process.env.SPOTIFY_CLIENT_ID,
+                scope: scope,
+                redirect_uri: "http://zink.apicius.local:6868/auth/spotify",
+            })
+        )
+
+    }catch(error) {
+        console.log("Error",error)
+        return res.send("Some error occured")
+    } 
+})
+
+app.get("/auth/spotify", async(req, res)=> {
+    var code = req.query.code || null;
+    // console.log(code)
+    // var state = req.query.state || null;
+    const headers = {
+        'content-type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + (new Buffer.from(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64'))
+    }
+    // console.log(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET)
+    const params = {
+        code: code,
+        redirect_uri: "http://zink.apicius.local:6868/auth/spotify",
+        grant_type: 'authorization_code',
+        
+    }
+    
+    try {
+        console.log(params)
+        const response = await axios.post('https://accounts.spotify.com/api/token', querystring.stringify(params), {headers:headers})
+        const access_token = response.data.access_token
+        
+        res.writeHead(200, {
+            "Set-Cookie": `spotify_token=${access_token}; Path=/; HttpOnly;`,
+    
+        })
+            .send()
+        console.log(response)
+    }
+    catch(error) {
+        console.log(error)
+        return res.send("some error occured")
+    }
+    
+    
+    
+})
+app.get("/spotify/account", async (req, res) => {
+    let token_type = "Bearer"
+    try {
+        const userRes = await axios.get("https://api.spotify.com/v1/me/tracks", {
+            headers: {
+                authorization: `${token_type} ${req.cookies.spotify_token}` 
+            }
+        })
+        res.send(userRes.data)
+    }
+    catch(error) {
+        console.log(error)
+        return res.send("some error occured")
+    }
+}) 
+app.get("/api/spotify/likes", async (req, res) => {
+    let token_type = "Bearer"
+    try {
+        const userRes = await axios.get("https://api.spotify.com/v1/me/tracks?limit=5", {
+            headers: {
+                authorization: `${token_type} ${req.cookies.spotify_token}` 
+            }
+        })
+        res.send(userRes.data)
+    }
+    catch(error) {
+        console.log(error)
+        return res.send("some error occured")
+    }
+})
+
+app.use("/spotify", express.static('spotify'))
+app.get('/spotify', function(req, res) {
+    res.sendFile(__dirname + '/spotify/index.html', {headers:{
+        "Access-Control-Allow-Origin":"https://en.wikipedia.org"}
+    });
+});
+
 //store discord user id in database then grab user data from database based on id 
 //implement token referesh? 
 //use views/template for account stuff
 
 //https://stackoverflow.com/questions/5998694/how-to-create-an-https-server-in-node-js need this for https
+
+
 app.get("/account", async(req, res) => {
     let token_type = "Bearer"
     const userRes = await axios.get("https://discord.com/api/users/@me", {
