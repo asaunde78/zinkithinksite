@@ -1,12 +1,18 @@
 const favicon = require('serve-favicon');
 const express = require('express');
 const path = require("path");
+const axios = require("axios")
+require("dotenv").config()
+
+const cookieParser =require("cookie-parser")
+
 const { MongoClient, SecureApiVersion } = require("mongodb")
 
 const client = new MongoClient( "mongodb://localhost:27017");
 client.connect()
     .then( () => {
         console.log("MongoDB Connected!")
+        
         // client.db("details").collection("pokemon").findOne().then( (poke) => console.log(poke))
         
     })
@@ -17,12 +23,13 @@ client.connect()
 //   .use(gzipStatic(__dirname + '/public'))
 
 const app = express();
+app.use(cookieParser())
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 
 app.get('/', function(req, res) {
-    console.log(req)
+    // console.log(req)
     res.sendFile(__dirname + '/index.html');
 });
 
@@ -143,9 +150,8 @@ app.get("/api/pokemon/search/",  (req, res) => {
         query.type.$size = 1
     }
     console.log(query)
-    client.db("details").collection("pokemon").find(
-        query
-    ).toArray().then( (arr) => {
+    
+    client.db("details").collection("pokemon").find().toArray().then( (arr) => {
         // console.log(arr)
         res.send(arr.map( (elem) => {
             let i = ""
@@ -198,6 +204,55 @@ app.get("/api/pokemon/:pokename",  (req, res) => {
     
 }) 
 
+app.get("/auth/discord", async(req, res)=> {
+    // console.log(res)
+    const code = req.query.code
+    const params = new URLSearchParams()
+    let user 
+    params.append("client_id", process.env.CLIENT_ID)
+    params.append("client_secret", process.env.CLIENT_SECRET)
+    params.append("grant_type", "authorization_code")
+    params.append("code", code)
+    params.append("redirect_uri", "http://zink.apicius.local:6868/auth/discord")
+    try {
+        const response = await axios.post("https://discord.com/api/oauth2/token", params)
+        console.log(response)
+        const {access_token, token_type}= response.data
+        console.log(access_token, token_type)
+        const userRes = await axios.get("https://discord.com/api/users/@me", {
+            headers: {
+                authorization: `${token_type} ${access_token}` 
+            }
+        })
+        console.log("Data: ", userRes)
+        let body = `<img src="https://cdn.discordapp.com/avatars/${userRes.data.id}/${userRes.data.avatar}">`
+        res.writeHead(200, {
+            "Content-Length":Buffer.byteLength(body),
+            "Content-Type":"text/html",
+            "Set-Cookie": `token=${access_token}; Path=/; HttpOnly;`
+        })
+            .end(body)
+
+    }catch(error) {
+        console.log("Error",error)
+        return res.send("Some error occured")
+    } 
+})
+
+//store discord user id in database then grab user data from database based on id 
+//implement token referesh? 
+//use views/template for account stuff
+
+//https://stackoverflow.com/questions/5998694/how-to-create-an-https-server-in-node-js need this for https
+app.get("/account", async(req, res) => {
+    let token_type = "Bearer"
+    const userRes = await axios.get("https://discord.com/api/users/@me", {
+        headers: {
+            authorization: `${token_type} ${req.cookies.token}` 
+        }
+    })
+    res.send(`<img src="https://cdn.discordapp.com/avatars/${userRes.data.id}/${userRes.data.avatar}">`)
+})
 const port = 6868;
 server.listen(port, function() {
     console.log(`Server started on port ${port}`);
