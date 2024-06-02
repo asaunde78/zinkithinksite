@@ -8,7 +8,8 @@ require("dotenv").config()
 
 const cookieParser =require("cookie-parser")
 
-const { MongoClient, SecureApiVersion } = require("mongodb")
+const { MongoClient, SecureApiVersion } = require("mongodb");
+const { setMaxIdleHTTPParsers } = require('http');
 
 const client = new MongoClient( "mongodb://localhost:27017");
 client.connect()
@@ -317,12 +318,55 @@ app.get("/spotify/account", async (req, res) => {
 app.get("/api/spotify/likes", async (req, res) => {
     let token_type = "Bearer"
     try {
-        const userRes = await axios.get("https://api.spotify.com/v1/me/tracks?limit=5", {
-            headers: {
-                authorization: `${token_type} ${req.cookies.spotify_token}` 
+        
+        const spotifydb = client.db("details").collection("spotify")
+        const mbzendpoint = "http://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query="
+
+        var start = "https://api.spotify.com/v1/me/tracks?limit=50"
+        while(start !== null) {
+            const userRes = await axios.get(start, {
+                headers: {
+                    authorization: `${token_type} ${req.cookies.spotify_token}` 
+                }
+            })
+            
+            for (const artists of userRes.data.items) {
+                for (const artist of artists?.track?.artists) {
+                    const q = await spotifydb.findOne({name:artist.name})
+                    // console.log(q)
+                    
+                    if(q !== null) {
+                        console.log("has", artist.name)
+
+                    }
+                    else {
+                        if(artist.name == "") {
+                            
+                            continue
+                        }
+                        console.log("doesn't have", artist.name, "yet")
+                        await new Promise(resolve => setTimeout(resolve, 1000))
+                        const res = await fetch(mbzendpoint + encodeURIComponent(artist.name), {
+                            headers: new Headers({
+                                "User-Agent":"SpotifyLikedDemographics/0.0.1 ( zinkithink@gmail.com )"
+                            })
+                        })
+                        const d = await res.json()
+                        console.log(d)
+                        if(d) {
+                            spotifydb.insertOne({name:artist.name, data:d.artists[0]})    
+                        }
+                        else {
+                            spotifydb.insertOne({name:artist.name})
+                        }
+                    }
+                }
             }
-        })
-        res.send(userRes.data)
+            start = userRes.data.next
+            
+        }
+        res.send("Done! :D")
+        // res.send(userRes.data)
     }
     catch(error) {
         console.log(error)
