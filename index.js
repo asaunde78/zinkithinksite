@@ -10,6 +10,7 @@ const cookieParser =require("cookie-parser")
 
 const { MongoClient, SecureApiVersion } = require("mongodb");
 const { setMaxIdleHTTPParsers } = require('http');
+const { addAbortListener } = require('events');
 
 const client = new MongoClient( "mongodb://localhost:27017");
 client.connect()
@@ -206,7 +207,30 @@ app.get("/api/pokemon/:pokename",  (req, res) => {
     
     
 }) 
+app.get("/auth/youtube", async(req, res) => {
+    
+})
+app.get("/youtube/login", async(req, res)=> {
+    
+    const params = new URLSearchParams()
+    params.append("client_id", process.env.GOOGLE_CLIENT_ID)
+    // console.log(process.env.GOOGLE_CLIENT_ID)
+    params.append("response_type", "token")
+    params.append("redirect_uri", "http://localhost:6868/youtube")
+    params.append("scope","https://www.googleapis.com/auth/youtube.readonly")
+    try {
+        let u = "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString()
+        console.log(u)
+        res.redirect(u)
+        // const response = await axios.get("https://accounts.google.com/o/oauth2/v2/auth", params)
+        // console.log(response)
+        // res.send(response)
 
+    }catch(error) {
+        console.log("Error",error)
+        return res.send("Some error occured")
+    } 
+})
 app.get("/auth/discord", async(req, res)=> {
     // console.log(res)
     const code = req.query.code
@@ -315,57 +339,89 @@ app.get("/spotify/account", async (req, res) => {
         return res.send("some error occured")
     }
 }) 
-app.get("/api/spotify/likes", async (req, res) => {
+
+async function addArtistDB(artist) {
+    const spotifydb = client.db("details").collection("spotify")
+
+    const mbzendpoint = "http://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query="
+
+    const q = await spotifydb.findOne({name:artist.name})
+    if(q !== null) {
+        console.log("has", artist.name)
+
+    }
+    else {
+        if(artist.name == "") {
+            return
+        }
+        console.log("doesn't have", artist.name, "yet")
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        const res = await fetch(mbzendpoint + encodeURIComponent(artist.name), {
+            headers: new Headers({
+                "Accept":"application/json",
+                "Content-Type":"application/json",
+                "User-Agent":"SpotifyLikedDemographics/1.0.1 ( zinkithink@gmail.com )"
+            })
+        })
+        const d = await res.json()
+        console.log(artist.name, d)
+        if(d) {
+            d.artists[0].name = artist.name
+            // console.log(d.artists[0])
+            spotifydb.insertOne(d.artists[0])    
+        }
+        else {
+            spotifydb.insertOne({name:artist.name})
+        }
+    }
+}
+app.get("/api/spotify/grablikes", async (req, res) => {
     let token_type = "Bearer"
     try {
         
-        const spotifydb = client.db("details").collection("spotify")
-        const mbzendpoint = "http://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query="
+        const spotifyusers = client.db("details").collection("spotifyusers")
 
+        const userData = await axios.get("https://api.spotify.com/v1/me", {
+            headers: {
+                authorization: `${token_type} ${req.cookies.spotify_token}` 
+            }
+        })
+        const email = userData.data.email
+        console.log("email:", email)
         var start = "https://api.spotify.com/v1/me/tracks?limit=50"
+        var song_list = []
         while(start !== null) {
             const userRes = await axios.get(start, {
                 headers: {
                     authorization: `${token_type} ${req.cookies.spotify_token}` 
                 }
             })
-            
+            console.log("curr liked length: ",song_list.push(...userRes.data.items.map( (item) => 
+                {
+                    var n = {added_at:item.added_at}
+                    Object.assign(n, item.track)
+                    return n
+                })))
             for (const artists of userRes.data.items) {
                 for (const artist of artists?.track?.artists) {
-                    const q = await spotifydb.findOne({name:artist.name})
-                    // console.log(q)
-                    
-                    if(q !== null) {
-                        console.log("has", artist.name)
-
-                    }
-                    else {
-                        if(artist.name == "") {
-                            
-                            continue
-                        }
-                        console.log("doesn't have", artist.name, "yet")
-                        await new Promise(resolve => setTimeout(resolve, 1000))
-                        const res = await fetch(mbzendpoint + encodeURIComponent(artist.name), {
-                            headers: new Headers({
-                                "User-Agent":"SpotifyLikedDemographics/0.0.1 ( zinkithink@gmail.com )"
-                            })
-                        })
-                        const d = await res.json()
-                        console.log(d)
-                        if(d) {
-                            spotifydb.insertOne({name:artist.name, data:d.artists[0]})    
-                        }
-                        else {
-                            spotifydb.insertOne({name:artist.name})
-                        }
-                    }
+                    await addArtistDB(artist)
                 }
             }
+        
             start = userRes.data.next
             
         }
-        res.send("Done! :D")
+        const user = await spotifyusers.findOne({email:email})
+        if(user !== null) {
+            console.log("users has ", user.email)
+            spotifyusers.updateOne({email:email}, {$set: {likes:song_list}})
+            
+        }
+        else {
+            console.log("users doesn't have ", email)
+            spotifyusers.insertOne({email:email, likes:song_list})
+        }
+        res.send(`Done! :D ${email}` )
         // res.send(userRes.data)
     }
     catch(error) {
@@ -373,6 +429,87 @@ app.get("/api/spotify/likes", async (req, res) => {
         return res.send("some error occured")
     }
 })
+app.get("/api/spotify/likes", async (req, res) => {
+    let token_type = "Bearer"
+    const spotifyusers = client.db("details").collection("spotifyusers")
+    
+    try {
+        const userData = await axios.get("https://api.spotify.com/v1/me", {
+            headers: {
+                authorization: `${token_type} ${req.cookies.spotify_token}` 
+            }
+        })
+        const email = userData.data.email
+        console.log(email)
+        res.send(await spotifyusers.findOne({email:email}))
+    }
+    catch(error) {
+        res.send("error")
+    }
+    
+
+})
+app.get("/api/spotify/likedata", async ( req, res) => {
+    let token_type = "Bearer"
+    const spotifyusers = client.db("details").collection("spotifyusers")
+    const spotifydb = client.db("details").collection("spotify")
+    try {
+        const userData = await axios.get("https://api.spotify.com/v1/me", {
+            headers: {
+                authorization: `${token_type} ${req.cookies.spotify_token}` 
+            }
+        })
+        const email = userData.data.email
+        // console.log(email)
+        const user = await spotifyusers.findOne({email:email})
+        // const a = Object.values(user.likes).map( (e) => {
+        //     const artist = await spotifydb.findOne({name:e.track.artists[0]})
+        // })
+        var songs = Object.values(user.likes)
+        for (const [ind, song] of user.likes.entries()) {
+            // console.log(song.track)
+            for (const [aind, artist] of song.track.artists.entries()) {
+                // console.log(song, ind)
+                // console.log(aind, artist)
+                // console.log()
+                songs[ind].track.artists[aind] = await spotifydb.findOne({name:artist.name})
+                continue
+            }
+        }
+        res.send(songs)
+    }
+    catch(error) {
+        res.send(`error${error}`)
+    }
+
+})
+app.get("/api/spotify/fixdb", async (req, res)=> {
+    const spotifydb = client.db("details").collection("spotify")
+    // const data = await spotifydb.find().toArray()
+    // for (const artist of data) {
+    //     spotifydb.updateOne({name:artist.name}, {$set:artist.data, $unset:{data:""}})
+
+    // }
+    // spotifydb.aggregate([ {$unset:"data"}])
+    // // console.log(data)
+    res.send(await spotifydb.find().toArray())
+})
+
+app.get("/api/spotify/senddb", async (req, res)=> {
+    const spotifydb = client.db("details").collection("spotify")
+    // const data = await spotifydb.find().toArray()
+    // for (const artist of data) {
+    //     spotifydb.updateOne({name:artist.name}, {$set:artist.data, $unset:{data:""}})
+
+    // }
+    // spotifydb.aggregate([ {$unset:"data"}])
+    // // console.log(data)
+    res.send(await spotifydb.find().toArray())
+})
+// app.get("/api/spotify/cleardb", async (req, res) => {
+//     client.db("details").collection("spotify").drop()
+//     res.send("cleared")
+// })
 
 app.use("/spotify", express.static('spotify'))
 app.get('/spotify', function(req, res) {

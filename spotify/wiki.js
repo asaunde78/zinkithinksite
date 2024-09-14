@@ -9,34 +9,9 @@ const mbzendpoint = "http://musicbrainz.org/ws/2/artist/?fmt=json&limit=1&query=
 spotifybutton.addEventListener("click", async () => {
     const response = await fetch("/api/spotify/likes")
     const data = await response.json()
-    // const artistArray = data.items.map( (t) => 
-    //     t.track.artists.map( ((ar) => ar.name)))
-
     
-    var complete = {}
-    for(const artists of data.items) {
-        // console.log("artist object", artists)
-        for(const artist of artists?.track?.artists) {
-            if(artist.name in complete) {
-                complete[artist.name].count += 1
-                continue
-            }
-            const res = await fetch(mbzendpoint + encodeURIComponent(artist.name))
-            const d = await res.json()
-            console.log(artist.name)
-            
-            complete[artist.name] = {count:1}
-            if(d ){
-                
-                complete[artist.name].data = d.artists[0]
-                
-            }
-            
-            
-            
-        }
-    }
-    console.log(complete)
+    // console.log(new Map(Object.values(data.likes).filter( (a) => a.track.preview_url).map( (a) => {return [a.track.name, a.track.preview_url]})))
+    
 }) 
 
 
